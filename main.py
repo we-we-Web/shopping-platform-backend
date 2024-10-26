@@ -6,8 +6,7 @@ from pydantic import BaseModel, Field
 from database import engine, SessionLocal, database
 from databases import Database
 from sqlalchemy.orm import Session
-from models import ProductDAO
-
+from models import ProductDAO, Base
 
 app = FastAPI()
 
@@ -15,6 +14,7 @@ app = FastAPI()
 async def startup():
     try:
         await database.connect()
+        Base.metadata.create_all(bind=engine)
         print("Database connected successfully.")
     except Exception as e:
         print(f"Database connection error: {e}")
