@@ -1,18 +1,58 @@
-from sqlalchemy import Boolean, Column, Integer, String
-from database import Base
+from sqlalchemy import MetaData, Table, Column, Integer, String, create_engine
+from sqlalchemy.orm import declarative_base
+from databases import Database
+from typing import Optional, List
+from sqlalchemy.sql import insert, delete, select, update
+from fastapi import FastAPI, HTTPException
+from database import database
 
-class Student(Base):
-    __tablename__ = 'students'
+
+Base = declarative_base()
+
+
+class Product(Base):
+    __tablename__ = 'product'
 
     id = Column(Integer, primary_key=True, index=True)
-    username = Column(String(64))
-    userid = Column(Integer, unique=True, nullable=True)
-    password = Column(String(32))
-    usergroup = Column(String(32))
+    name = Column(String(64))
+    price = Column(Integer)
+    color = Column(String(32))
+    size = Column(String(32))
+    remain_amount = Column(Integer)
 
-class Group(Base):
-    __tablename__ = 'studentgroups'
 
-    id = Column(Integer, primary_key=True, index=True)
-    groupname = Column(String(32), unique=True)
-    members = Column(String(64))
+class ProductDAO:
+    @staticmethod
+    async def create_product(product_data: dict):
+        query = select(Product).where(Product.id == product_data["id"])
+        product = await database.fetch_one(query)
+        if(product):
+            raise HTTPException(status_code=409, detail="Product already exist")
+        else:
+            query = insert(Product).values(**product_data)
+            product_id = await database.execute(query)
+            return product_id
+
+    @staticmethod
+    async def delete_product(product_id: int):
+        query = delete(Product).where(Product.id == product_id)
+        result = await database.execute(query)
+        if result == 0:
+            raise HTTPException(status_code=404, detail="Product not found")
+        return True
+
+    @staticmethod
+    async def update_product(product_id: int, update_data: dict):
+        query = update(Product).where(Product.id == product_id).values(**update_data)
+        result = await database.execute(query)
+        if result == 0:
+            raise HTTPException(status_code=404, detail="Product not found")
+        return True
+
+    @staticmethod
+    async def get_product_by_id(product_id: int):
+        query = select(Product).where(Product.id == product_id)
+        product = await database.fetch_one(query)
+        if not product:
+            raise HTTPException(status_code=404, detail="Product not found")
+        return product
