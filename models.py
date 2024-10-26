@@ -6,7 +6,6 @@ from sqlalchemy.sql import insert, delete, select, update
 from fastapi import FastAPI, HTTPException
 from database import database
 
-
 Base = declarative_base()
 
 
