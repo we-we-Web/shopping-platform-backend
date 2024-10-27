@@ -55,3 +55,11 @@ class ProductDAO:
         if not product:
             raise HTTPException(status_code=404, detail="Product not found")
         return product
+    
+    @staticmethod
+    async def get_all_products():
+        query = select(Product)
+        products = await database.fetch_all(query)
+        if not products:
+            raise HTTPException(status_code=404, detail="There isn't any product")
+        return products
