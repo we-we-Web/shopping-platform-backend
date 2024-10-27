@@ -70,5 +70,10 @@ async def update_product(product_id: int, update_data: UpdateProduct):
 async def get_product_by_id(product_id: int):
     return await ProductDAO.get_product_by_id(product_id)
 
+# 獲取所有產品
+@app.get("/products", response_model=List[Product])
+async def get_all_products():
+    return await ProductDAO.get_all_products()
+
 
 
