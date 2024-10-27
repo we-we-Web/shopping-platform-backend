@@ -38,3 +38,9 @@ class ProductRepository:
         if not product:
             raise HTTPException(status_code=404, detail="Product not found")
         return product
+    
+    @staticmethod
+    async def get_all_products():
+        query = select(Product)
+        products = await database.fetch_all(query)
+        return products

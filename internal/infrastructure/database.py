@@ -7,7 +7,7 @@ import os
 
 # load_dotenv()
 
-URL_DATABASE = os.getenv("db_url")
+URL_DATABASE = "mysql+pymysql://root:wb9TJ10NuKiW2OvfoG4Dmdn7y85hA6Q3@hnd1.clusters.zeabur.com:31197/shopping_platform_DB"
 
 engine = create_engine(URL_DATABASE)
 

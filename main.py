@@ -1,4 +1,4 @@
-from typing import Annotated
+from typing import Annotated, List
 from fastapi import FastAPI, Depends
 from sqlalchemy.orm import Session
 from internal.infrastructure.router import get_db, app
@@ -29,3 +29,8 @@ async def update_product(product_id: int, update_data: UpdateProduct):
 @app.get("/products/{product_id}", response_model=Product)
 async def get_product_by_id(product_id: int):
     return await ProductRepository.get_product_by_id(product_id)
+
+# 獲取所有產品
+@app.get("/products", response_model=List[Product])
+async def get_all_products():
+    return await ProductRepository.get_all_products()
