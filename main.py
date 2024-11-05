@@ -1,12 +1,10 @@
-from typing import Optional, Union, List, Annotated
-from sqlalchemy import select
-import uvicorn
-from fastapi import FastAPI, Body, Cookie, Header, HTTPException, Depends, status
-from pydantic import BaseModel, Field
-from database import engine, SessionLocal, database
-from databases import Database
+from typing import Optional, List, Annotated
+from fastapi import FastAPI, Depends
+from pydantic import BaseModel
+from infrastructure.database import engine, SessionLocal, database
 from sqlalchemy.orm import Session
-from models import ProductDAO, Base
+from repository.product_repository import ProductRepository
+from domain.product import Base
 
 app = FastAPI()
 
@@ -52,28 +50,28 @@ db_dependency = Annotated[Session, Depends(get_db)]
 @app.post("/products", response_model=int)
 async def create_product(product: Product):
     product_data = product.model_dump()
-    product_id = await ProductDAO.create_product(product_data)
+    product_id = await ProductRepository.create_product(product_data)
     return product_id
 
 # 刪除產品
 @app.delete("/products/{product_id}", response_model=bool)
 async def delete_product(product_id: int):
-    return await ProductDAO.delete_product(product_id)
+    return await ProductRepository.delete_product(product_id)
 
 # 更新產品
 @app.put("/products/{product_id}", response_model=bool)
 async def update_product(product_id: int, update_data: UpdateProduct):
-    return await ProductDAO.update_product(product_id, update_data.model_dump(exclude_unset=True))
+    return await ProductRepository.update_product(product_id, update_data.model_dump(exclude_unset=True))
 
 # 獲取產品
 @app.get("/products/{product_id}", response_model=Product)
 async def get_product_by_id(product_id: int):
-    return await ProductDAO.get_product_by_id(product_id)
+    return await ProductRepository.get_product_by_id(product_id)
 
 # 獲取所有產品
 @app.get("/products", response_model=List[Product])
 async def get_all_products():
-    return await ProductDAO.get_all_products()
+    return await ProductRepository.get_all_products()
 
 
 
