@@ -7,8 +7,21 @@ from database import engine, SessionLocal, database
 from databases import Database
 from sqlalchemy.orm import Session
 from models import ProductDAO, Base
+from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
+
+origins = [
+    "https://dongyi.hnd1.zeabur.app",
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 @app.on_event("startup")
 async def startup():
