@@ -1,26 +1,9 @@
-from sqlalchemy import MetaData, Table, Column, Integer, String, create_engine
-from sqlalchemy.orm import declarative_base
-from databases import Database
-from typing import Optional, List
 from sqlalchemy.sql import insert, delete, select, update
 from fastapi import FastAPI, HTTPException
-from database import database
+from infrastructure.database import database
+from domain.product import Product
 
-Base = declarative_base()
-
-
-class Product(Base):
-    __tablename__ = 'product'
-
-    id = Column(Integer, primary_key=True, index=True)
-    name = Column(String(64))
-    price = Column(Integer)
-    color = Column(String(32))
-    size = Column(String(32))
-    remain_amount = Column(Integer)
-
-
-class ProductDAO:
+class ProductRepository:
     @staticmethod
     async def create_product(product_data: dict):
         query = select(Product).where(Product.id == product_data["id"])
