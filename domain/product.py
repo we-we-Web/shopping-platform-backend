@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Float
+from sqlalchemy import Column, Integer, String
 from sqlalchemy.orm import declarative_base
 
 Base = declarative_base()
@@ -15,4 +15,4 @@ class Product(Base):
     remain_amount = Column(Integer)
     description = Column(String(256))  
     categories = Column(String(256))  
-    discount = Column(Float) 
+    discount = Column(Integer) 

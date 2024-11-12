@@ -50,7 +50,7 @@ class UpdateProduct(BaseModel):
     remain_amount: Optional[int] = None
     description: Optional[str] = None
     categories: Optional[str]= None 
-    discount: Optional[float] = None 
+    discount: Optional[int] = None 
 
 def get_db():
     db = SessionLocal()
