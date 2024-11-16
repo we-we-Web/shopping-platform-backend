@@ -39,9 +39,9 @@ class Product(BaseModel):
     color: str
     size: str
     remain_amount: int
-    description: str
-    categories: str
-    discount: float
+    description: Optional[str]
+    categories: Optional[str]
+    discount: Optional[int]
 
 class UpdateProduct(BaseModel):
     price: Optional[int] = None
