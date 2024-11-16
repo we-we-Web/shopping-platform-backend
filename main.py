@@ -39,12 +39,18 @@ class Product(BaseModel):
     color: str
     size: str
     remain_amount: int
+    description: Optional[str]
+    categories: Optional[str]
+    discount: Optional[int]
 
 class UpdateProduct(BaseModel):
     price: Optional[int] = None
     color: Optional[str] = None
     size: Optional[str] = None
     remain_amount: Optional[int] = None
+    description: Optional[str] = None
+    categories: Optional[str]= None 
+    discount: Optional[int] = None 
 
 def get_db():
     db = SessionLocal()

@@ -13,3 +13,6 @@ class Product(Base):
     color = Column(String(32))
     size = Column(String(32))
     remain_amount = Column(Integer)
+    description = Column(String(256))  
+    categories = Column(String(256))  
+    discount = Column(Integer) 
