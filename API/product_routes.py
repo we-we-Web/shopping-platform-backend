@@ -19,6 +19,7 @@ class Product(BaseModel):
     description: Optional[str]
     categories: Optional[str]
     discount: Optional[int]
+    image_url: Optional[str]
 
 class UpdateProduct(BaseModel):
     price: Optional[int] = None
@@ -28,6 +29,7 @@ class UpdateProduct(BaseModel):
     description: Optional[str] = None
     categories: Optional[str] = None
     discount: Optional[int] = None
+    image_url: Optional[str] = None
 
 # Database Dependency
 def get_db():
