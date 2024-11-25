@@ -29,7 +29,6 @@ class UpdateProduct(BaseModel):
     description: Optional[str] = None
     categories: Optional[str] = None
     discount: Optional[int] = None
-    image_url: Optional[str] = None
 
 # Database Dependency
 def get_db():
@@ -67,3 +66,8 @@ async def get_product_by_id(product_id: int):
 @router.get("/", response_model=List[Product])
 async def get_all_products():
     return await ProductRepository.get_all_products()
+
+# 獲取特定類別的產品
+@router.get("categories/{category}", response_model=List[Product])
+async def get_products_by_category(category: str):
+    return await ProductRepository.get_products_by_category(category)

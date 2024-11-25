@@ -1,4 +1,5 @@
 from sqlalchemy.sql import insert, delete, select, update
+from sqlalchemy.orm import Session
 from fastapi import FastAPI, HTTPException
 from infrastructure.database import database
 from domain.product import Product
@@ -45,4 +46,12 @@ class ProductRepository:
         products = await database.fetch_all(query)
         if not products:
             raise HTTPException(status_code=404, detail="There isn't any product")
+        return products
+    
+    @staticmethod
+    async def get_products_by_category(category: str):
+        query = select(Product).filter(Product.categories.like(f"%{category}%"))
+        products = await database.fetch_all(query)
+        if not products:
+            raise HTTPException(status_code=404, detail="There isn't any product in this category")
         return products
