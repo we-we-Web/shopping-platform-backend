@@ -71,3 +71,8 @@ async def get_all_products():
 @router.get("categories/{category}", response_model=List[Product])
 async def get_products_by_category(category: str):
     return await ProductRepository.get_products_by_category(category)
+
+#獲取特定名稱的產品
+@router.get("name/{name}", response_model=List[Product])
+async def get_product_by_name(name: str):
+    return await ProductRepository.get_products_by_name(name)
