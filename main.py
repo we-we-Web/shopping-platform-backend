@@ -29,9 +29,5 @@ async def shutdown():
     await database.disconnect()
     print("Database disconnected successfully.")
 
-app.include_router(product_router, prefix="/product", tags=["Products"])
-app.include_router(product_image_router, prefix="/product_image", tags=["Product Images"])
-
-
-
-
+app.include_router(product_router, prefix="/api/product", tags=["Products"])
+app.include_router(product_image_router, prefix="/api/product_image", tags=["Product Images"])
