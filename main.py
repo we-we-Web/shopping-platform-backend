@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, APIRouter
 from infrastructure.database import engine, database
 from domain.product import Base
 from fastapi.middleware.cors import CORSMiddleware
@@ -29,5 +29,11 @@ async def shutdown():
     await database.disconnect()
     print("Database disconnected successfully.")
 
+router = APIRouter()
+@router.get("/", response_model=str)
+async def demo():
+    return "hello dongyi product service"
+
+app.include_router(router, prefix="/api")
 app.include_router(product_router, prefix="/api/product", tags=["Products"])
 app.include_router(product_image_router, prefix="/api/product_image", tags=["Product Images"])
