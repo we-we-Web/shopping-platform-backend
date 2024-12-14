@@ -32,12 +32,10 @@ s3 = boto3.resource(
 )
 bucket = s3.Bucket(AWS_BUCKET_NAME)
 
-async def s3_upload(contents: bytes, key: str):
+async def s3_upload(contents: bytes, key: str, content_type: str):
     logger.info(f"Uploading file to S3 with key: {key}")
-    bucket.put_object(Key=key, Body=contents)
+    bucket.put_object(Key=key, Body=contents, ContentType=content_type)
 
-async def s3_download(key: str):
-    return s3.Object(bucket_name=AWS_BUCKET_NAME, key=key).get()['Body'].read()
 
 # 建立 Router
 router = APIRouter()
@@ -69,7 +67,7 @@ async def create_product_image(product_id: int, db: db_dependency, file: UploadF
         return {"message": "File type not supported"}
     
     file_name = f'{uuid4()}.{SUPPORTED_FILE_TYPES[kind.extension]}'
-    await s3_upload(contents=contents, key=file_name)
+    await s3_upload(contents=contents, key=file_name, content_type=file.content_type)
 
     query = select(Product).where(Product.id == product_id)
     result = db.execute(query)
@@ -88,19 +86,26 @@ async def create_product_image(product_id: int, db: db_dependency, file: UploadF
 
 @router.get("/get_image")
 async def get_product_image(product_id: int, db: db_dependency):
-    try:
-        query = select(Product).where(Product.id == product_id)
-        result = db.execute(query)
-        product = result.scalar_one_or_none()
-        contents = await s3_download(key=product.image_url)
-        
-    except:
+    query = select(Product).where(Product.id == product_id)
+    result = db.execute(query)
+    product = result.scalar_one_or_none()
+
+    if not product or not product.image_url:
         raise HTTPException(status_code=404, detail="Product not found or image not found")
+
+    try:
+        obj = s3.Object(bucket_name=AWS_BUCKET_NAME, key=product.image_url)
+        file_obj = obj.get()
+        contents = file_obj['Body'].read()
+        content_type = file_obj['ContentType']
+    except Exception as e:
+        logger.error(f"Error fetching image: {e}")
+        raise HTTPException(status_code=404, detail="Image not found")
 
     return Response(
         content=contents,
         headers={
-            'Contents-Disposition': f'inline;filename={product.image_url}',
-            'Content-Type': 'application/octet-stream',
+            'Content-Disposition': f'inline;filename={product.image_url}',
+            'Content-Type': content_type,
         }
     )
