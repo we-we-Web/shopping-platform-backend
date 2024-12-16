@@ -26,11 +26,20 @@ class ProductRepository:
         return True
 
     @staticmethod
-    async def update_product(product_id: int, update_data: dict):
-        query = update(Product).where(Product.id == product_id).values(**update_data)
-        result = await database.execute(query)
+    async def update_product(product_id: int, update_data: dict, db: Session):
+        query = select(Product).where(Product.id == product_id)
+        result = db.execute(query)
+        product = result.scalar_one_or_none()
         if result == 0:
             raise HTTPException(status_code=404, detail="Product not found")
+        
+        for field, value in update_data.items():
+            setattr(product, field, value)
+
+        db.add(product)
+        db.commit()
+        db.refresh(product)
+
         return True
 
     @staticmethod
