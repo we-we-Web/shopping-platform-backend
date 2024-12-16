@@ -142,9 +142,9 @@ async def create_product(product: ProductModel):
 async def delete_product(product_id: int):
     return await ProductRepository.delete_product(product_id)
 
-@router.put("/{product_id}", response_model=bool)
-async def update_product(product_id: int, update_data: UpdateProduct):
-    return await ProductRepository.update_product(product_id, update_data.model_dump(exclude_unset=True))
+@router.patch("/{product_id}", response_model=bool)
+async def update_product(product_id: int, update_data: UpdateProduct, db: db_dependency):
+    return await ProductRepository.update_product(product_id, update_data.model_dump(exclude_unset=True), db)
 
 @router.get("/{product_id}", response_model=ProductModel)
 async def get_product_by_id(product_id: int):
