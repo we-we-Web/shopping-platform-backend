@@ -55,9 +55,7 @@ class ProductModel(BaseModel):
     id: int
     name: str
     price: int
-    color: str
-    size: str
-    remain_amount: int
+    size: dict
     description: Optional[str]
     categories: Optional[str]
     discount: Optional[int]
@@ -65,9 +63,7 @@ class ProductModel(BaseModel):
 
 class UpdateProduct(BaseModel):
     price: Optional[int] = None
-    color: Optional[str] = None
-    size: Optional[str] = None
-    remain_amount: Optional[int] = None
+    size: Optional[dict] = None
     description: Optional[str] = None
     categories: Optional[str] = None
     discount: Optional[int] = None
