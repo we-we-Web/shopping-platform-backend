@@ -73,7 +73,7 @@ class UpdateProduct(BaseModel):
     discount: Optional[int] = None
 
 
-@router.post("/upload_image")
+@router.patch("/upload_image")
 async def create_product_image(product_id: int, db: db_dependency, file: UploadFile | None = None):
     if not file:
         return {"message": "No file uploaded"}
