@@ -26,19 +26,15 @@ SUPPORTED_FILE_TYPES = {
 }
 AWS_BUCKET_NAME = 'dongyishoppingplatform'
 
-s3 = boto3.resource(
+s3 = boto3.client(
     's3',
     aws_access_key_id=os.getenv("aws_access_key_id"),
     aws_secret_access_key=os.getenv("aws_secret_access_key"),
     region_name='ap-southeast-2'
 )
-bucket = s3.Bucket(AWS_BUCKET_NAME)
-
 
 import logging
 
-# 初始化 S3 資源或客戶端
-s3 = boto3.client('s3', region_name='ap-southeast-2')
 logger = logging.getLogger(__name__)
 
 async def s3_upload(contents: bytes, key: str, content_type: str, acl: str = 'private', server_side_encryption='AES256'):
