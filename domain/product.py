@@ -14,4 +14,4 @@ class Product(Base):
     description = Column(String(256))  
     categories = Column(String(256))  
     discount = Column(Integer)
-    image_url = Column(String(256))
+    image_url = Column(JSON, nullable=True, default=list)

@@ -1,5 +1,6 @@
 from typing import List, Optional, Annotated
 from fastapi import APIRouter, Depends, UploadFile, File, HTTPException, Response
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 from sqlalchemy import select
@@ -19,23 +20,43 @@ load_dotenv()
 KB = 1024
 MB = 1024 * KB
 SUPPORTED_FILE_TYPES = {
-    'jpeg': 'jpeg',
-    'png': 'png',
-    'jpg': 'jpg'
+    'jpeg': 'image/jpeg',
+    'png': 'image/png',
+    'jpg': 'image/jpg'
 }
 AWS_BUCKET_NAME = 'dongyishoppingplatform'
 
 s3 = boto3.resource(
     's3',
     aws_access_key_id=os.getenv("aws_access_key_id"),
-    aws_secret_access_key=os.getenv("aws_secret_access_key")
+    aws_secret_access_key=os.getenv("aws_secret_access_key"),
+    region_name='ap-southeast-2'
 )
 bucket = s3.Bucket(AWS_BUCKET_NAME)
 
 
-async def s3_upload(contents: bytes, key: str, content_type: str):
-    logger.info(f"Uploading file to S3 with key: {key}")
-    bucket.put_object(Key=key, Body=contents, ContentType=content_type)
+import logging
+
+# 初始化 S3 資源或客戶端
+s3 = boto3.client('s3', region_name='ap-southeast-2')
+logger = logging.getLogger(__name__)
+
+async def s3_upload(contents: bytes, key: str, content_type: str, acl: str = 'private', server_side_encryption='AES256'):
+    logger.info(f"Uploading file to S3 with key: {key} and ACL: {acl}")
+    try:
+        s3.put_object(
+            Bucket=AWS_BUCKET_NAME,
+            Key=key,
+            Body=contents,
+            ContentType=content_type,
+            ACL=acl,
+            ServerSideEncryption=server_side_encryption
+        )
+        logger.info(f"File successfully uploaded to S3 with key: {key}")
+    except Exception as e:
+        logger.error(f"Failed to upload file to S3: {e}")
+        raise HTTPException(status_code=500, detail="Failed to upload file to S3")
+
 
 
 def get_db():
@@ -59,7 +80,6 @@ class ProductModel(BaseModel):
     description: Optional[str]
     categories: Optional[str]
     discount: Optional[int]
-    image_url: Optional[str]
 
 class UpdateProduct(BaseModel):
     price: Optional[int] = None
@@ -81,12 +101,12 @@ async def create_product_image(product_id: int, db: db_dependency, file: UploadF
         return {"message": "File size must be between 0 and 5MB"}
 
     kind = filetype.guess(contents)
-    
+
     if kind is None or kind.extension not in SUPPORTED_FILE_TYPES:
         return {"message": "File type not supported"}
-    
-    file_name = f'{uuid4()}.{SUPPORTED_FILE_TYPES[kind.extension]}'
-    await s3_upload(contents=contents, key=file_name, content_type=file.content_type)
+
+    file_name = f'{uuid4()}.{kind.extension}'
+    await s3_upload(contents=contents, key=file_name, content_type=file.content_type, acl='public-read')
 
     query = select(Product).where(Product.id == product_id)
     result = db.execute(query)
@@ -95,7 +115,10 @@ async def create_product_image(product_id: int, db: db_dependency, file: UploadF
     if not product:
         return {"message": "Product not found"}
 
-    product.image_url = file_name
+    if product.image_url is None:
+        product.image_url = []
+
+    product.image_url = product.image_url + [file_name]
     db.add(product)
     db.commit()
     db.refresh(product)
@@ -103,30 +126,20 @@ async def create_product_image(product_id: int, db: db_dependency, file: UploadF
     return {"message": "Image uploaded successfully", "image_url": product.image_url}
 
 @router.get("/get_image")
-async def get_product_image(product_id: int, db: db_dependency):
+async def get_product_images(product_id: int, db: db_dependency):
     query = select(Product).where(Product.id == product_id)
     result = db.execute(query)
     product = result.scalar_one_or_none()
 
     if not product or not product.image_url:
-        raise HTTPException(status_code=404, detail="Product not found or image not found")
+        raise HTTPException(status_code=404, detail="Product not found or images not found")
 
-    try:
-        obj = s3.Object(bucket_name=AWS_BUCKET_NAME, key=product.image_url)
-        file_obj = obj.get()
-        contents = file_obj['Body'].read()
-        content_type = file_obj['ContentType']
-    except Exception as e:
-        logger.error(f"Error fetching image: {e}")
-        raise HTTPException(status_code=404, detail="Image not found")
+    image_urls = product.image_url  # 假設這是一個包含多個圖片 URL 的列表
 
-    return Response(
-        content=contents,
-        headers={
-            'Content-Disposition': f'inline;filename={product.image_url}',
-            'Content-Type': content_type,
-        }
-    )
+    # 構建圖片的完整 URL
+    full_image_urls = [f"https://{AWS_BUCKET_NAME}.s3.amazonaws.com/{url}" for url in image_urls]
+
+    return JSONResponse(content={"image_urls": full_image_urls})
 
 @router.post("/", response_model=int)
 async def create_product(product: ProductModel):
