@@ -82,7 +82,7 @@ class ProductRepository:
     async def update_stock(update_data: list, db: Session):
         for data in update_data:
             order_data = data.dict()
-            query = select(Product).where(Product.id == order_data["id"])
+            query = select(Product).where(Product.id == int(order_data["id"]))
             result = db.execute(query)
             product = result.scalar_one_or_none()
 
@@ -91,9 +91,10 @@ class ProductRepository:
 
             for field, value in order_data["spec"].items():
                 if product.size.get(field, 0) < value:
-                    raise HTTPException(status_code=400, detail=f"Stock of {field} is not enough")
+                    return False
 
-                # 減少庫存
+
+            for field, value in order_data["spec"].items():
                 product.size[field] -= value
 
             # 使用 SQLAlchemy 的 `update` 方法將變更提交到資料庫
