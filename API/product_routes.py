@@ -1,5 +1,5 @@
 from typing import List, Optional, Annotated
-from fastapi import APIRouter, Depends, UploadFile, File, HTTPException, Response
+from fastapi import APIRouter, Depends, UploadFile, File, HTTPException, Response, Body
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
@@ -13,6 +13,9 @@ from dotenv import load_dotenv
 from infrastructure.database import SessionLocal, database
 from domain.product import Product
 from repository.product_repository import ProductRepository
+from API.dto.ProductModel import ProductModel
+from API.dto.UpdateProduct import UpdateProduct
+from API.dto.CheckRemain import CheckRemain
 
 load_dotenv()
 
@@ -66,23 +69,6 @@ db_dependency = Annotated[Session, Depends(get_db)]
 
 
 router = APIRouter()
-
-
-class ProductModel(BaseModel):
-    id: int
-    name: str
-    price: int
-    size: dict
-    description: Optional[str]
-    categories: Optional[str]
-    discount: Optional[int]
-
-class UpdateProduct(BaseModel):
-    price: Optional[int] = None
-    size: Optional[dict] = None
-    description: Optional[str] = None
-    categories: Optional[str] = None
-    discount: Optional[int] = None
 
 
 @router.patch("/upload_image")
@@ -166,3 +152,8 @@ async def get_products_by_category(category: str):
 @router.get("/name/{name}", response_model=List[ProductModel])
 async def get_product_by_name(name: str):
     return await ProductRepository.get_products_by_name(name)
+
+@router.put("/stock_upd", response_model=bool)
+async def update_stock(update_data: List[CheckRemain], db: db_dependency):
+    return await ProductRepository.update_stock(update_data, db)
+

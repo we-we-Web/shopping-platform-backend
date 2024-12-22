@@ -1,6 +1,6 @@
 from sqlalchemy.sql import insert, delete, select, update
 from sqlalchemy.orm import Session
-from sqlalchemy import func, or_
+from sqlalchemy import func, or_, update
 from fastapi import FastAPI, HTTPException
 from infrastructure.database import database
 from domain.product import Product
@@ -76,4 +76,36 @@ class ProductRepository:
         if not products:
             raise HTTPException(status_code=404, detail="There isn't any product with this name")
         return products
+
+    
+    @staticmethod
+    async def update_stock(update_data: list, db: Session):
+        for data in update_data:
+            order_data = data.dict()
+            query = select(Product).where(Product.id == order_data["id"])
+            result = db.execute(query)
+            product = result.scalar_one_or_none()
+
+            if not product:
+                raise HTTPException(status_code=404, detail=f"Product with ID {order_data['id']} not found")
+
+            for field, value in order_data["spec"].items():
+                if product.size.get(field, 0) < value:
+                    raise HTTPException(status_code=400, detail=f"Stock of {field} is not enough")
+
+                # 減少庫存
+                product.size[field] -= value
+
+            # 使用 SQLAlchemy 的 `update` 方法將變更提交到資料庫
+            stmt = (
+                update(Product)
+                .where(Product.id == order_data["id"])
+                .values(size=product.size)
+            )
+            db.execute(stmt)
+            db.commit()
+
+
+        return True
+
 
