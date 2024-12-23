@@ -157,3 +157,7 @@ async def get_product_by_name(name: str):
 async def update_stock(update_data: List[CheckRemain], db: db_dependency):
     return await ProductRepository.update_stock(update_data, db)
 
+@router.delete("/delete_image/{product_id}")
+async def delete_image(product_id: int, db: db_dependency):
+    return await ProductRepository.delete_image(product_id, db)
+
