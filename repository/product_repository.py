@@ -106,7 +106,22 @@ class ProductRepository:
             db.execute(stmt)
             db.commit()
 
+        return True
+    
+    @staticmethod
+    async def delete_image(product_id: int, db: Session):
+        query = select(Product).where(Product.id == product_id)
+        result = db.execute(query)
+        product = result.scalar_one_or_none()
 
+        if not product or not product.image_url:
+            raise HTTPException(status_code=404, detail="Product not found or images not found")
+        
+        product.image_url = []
+        db.add(product)
+        db.commit()
+        db.refresh(product)
+        
         return True
 
 
